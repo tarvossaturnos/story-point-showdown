@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { createRoom, reduceRoom, viewFor, stats, csv, POINT_VALUES } from './game';
+import { createRoom, reduceRoom, viewFor, stats, csv, POINT_VALUES, formatPoint } from './game';
 import { CREATURES } from './creatures';
 if (!globalThis.crypto) Object.defineProperty(globalThis, 'crypto', { value: webcrypto });
 function fixture() {
@@ -63,7 +63,7 @@ test('Restart clears votes, revelation and final estimate, and rotates round', (
 });
 test('Statistics parse the decimal comma and exclude uncertainty or coffee', () => {
   const story = viewFor(fixture(), 'host').stories[0];
-  assert.deepEqual(stats({ ...story, votes: { a: '0,5', b: '1', c: '?', d: '☕', e: null } }), { count: 2, average: '0,8', consensus: false, min: 0.5, max: 1 });
+  assert.deepEqual(stats({ ...story, votes: { a: '0,5', b: '1', c: '?', d: '☕', e: null } }), { count: 2, average: '0.8', consensus: false, min: 0.5, max: 1 });
   assert.equal(stats({ ...story, votes: { a: '5', b: '5' } }).consensus, true);
 });
 test('Half-point and 40-point votes remain private until reveal and can be finalized and exported', () => {
@@ -73,11 +73,11 @@ test('Half-point and 40-point votes remain private until reveal and can be final
   assert.deepEqual(viewFor(room, 'guest').stories[0].votes, { guest: '0,5', host: null });
   assert.equal(reduceRoom(room, 'guest', { type: 'vote', storyId: story.id, round: story.round, value: '0' }), room);
   room = reduceRoom(room, 'host', { type: 'reveal' });
-  assert.equal(stats(viewFor(room, 'guest').stories[0]).average, '20,3');
+  assert.equal(stats(viewFor(room, 'guest').stories[0]).average, '20.3');
   for (const value of ['0,5', '40']) {
     room = reduceRoom(room, 'host', { type: 'estimate', value });
     assert.equal(room.stories[0].estimate, value);
-    assert.ok(csv(viewFor(room, 'guest')).includes(`"${value}"`));
+    assert.ok(csv(viewFor(room, 'guest')).includes(`"${formatPoint(value)}"`));
   }
 });
 test('All nine point cards use distinct illustration panels with stable identities', () => {
@@ -101,4 +101,19 @@ test('Removing the active story chooses another and removing last empties the ar
   assert.equal(room.activeId, room.stories[0].id);
   room = reduceRoom(room, 'host', { type: 'remove', id: room.activeId });
   assert.equal(room.activeId, null); assert.equal(room.stories.length, 0);
+});
+
+test('English display and exports preserve stored half-point votes', () => {
+  const room = fixture();
+  room.stories[0].votes.guest = '0,5';
+  room.stories[0].estimate = '0,5';
+  room.stories[0].revealed = true;
+  const exported = csv(viewFor(room, 'host'));
+  assert.ok(exported.startsWith('\uFEFF"Reference";"Story";"Estimate"'));
+  assert.ok(exported.includes('"0.5"'));
+  assert.ok(!exported.includes('"0,5"'));
+  assert.equal(room.stories[0].votes.guest, '0,5');
+  assert.equal(formatPoint('?'), '?');
+  assert.equal(formatPoint('☕'), '☕');
+  assert.equal(formatPoint(null), '—');
 });

@@ -5,7 +5,7 @@ export type Session = { roomId: string; userId: string; name: string; host: bool
 type Wire = { type: 'hello'; userId: string; name: string; token: string } | { type: 'action'; action: Action } | { type: 'state'; room: PublicRoom } | { type: 'ping' } | { type: 'pong' };
 export function useRoom(session: Session | null) {
   const [room, setRoom] = useState<PublicRoom | null>(session?.initial ? viewFor(session.initial, session.userId) : null);
-  const [status, setStatus] = useState('Verbinding maken…');
+  const [status, setStatus] = useState('Connecting…');
   const [connected, setConnected] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState('');
@@ -19,7 +19,7 @@ export function useRoom(session: Session | null) {
     let ready = false;
     const connections = new Map<string, DataConnection>();
     let hostConnection: DataConnection | undefined;
-    setError(''); setConnected(false); setStatus('Verbinding maken…');
+    setError(''); setConnected(false); setStatus('Connecting…');
     if (session.host && !source.current) source.current = session.initial ?? null;
     const peer = session.host ? new Peer('shodown-' + session.roomId) : new Peer();
     const broadcast = () => {
@@ -30,12 +30,12 @@ export function useRoom(session: Session | null) {
     };
     const apply = (id: string, action: unknown) => { if (source.current) { source.current = reduceRoom(source.current, id, action); broadcast(); } };
     sendRef.current = action => { if (session.host) apply(session.userId, action); else if (hostConnection?.open && joined) hostConnection.send({ type: 'action', action }); };
-    const fail = (message: string) => { if (live) { setError(message); setConnected(false); setStatus('Niet verbonden'); } };
+    const fail = (message: string) => { if (live) { setError(message); setConnected(false); setStatus('Disconnected'); } };
     peer.on('open', () => {
       if (!live) return;
       ready = true;
-      if (session.host) { setConnected(true); setStatus('Kamer is live'); broadcast(); return; }
-      setStatus('Kamer binnenkomen…');
+      if (session.host) { setConnected(true); setStatus('Room is live'); broadcast(); return; }
+      setStatus('Joining room…');
       hostConnection = peer.connect('shodown-' + session.roomId, { reliable: true, serialization: 'json' });
       hostConnection.on('open', () => hostConnection?.send({ type: 'hello', userId: session.userId, name: session.name, token: session.token }));
       hostConnection.on('data', raw => {
@@ -43,11 +43,11 @@ export function useRoom(session: Session | null) {
         if (!live || !message || typeof message !== 'object') return;
         if (message.type === 'pong') received = Date.now();
         if (message.type === 'state' && message.room?.id === session.roomId && Array.isArray(message.room.stories)) {
-          received = Date.now(); joined = true; setRoom(message.room); setConnected(true); setError(''); setStatus('Verbonden met de kamer');
+          received = Date.now(); joined = true; setRoom(message.room); setConnected(true); setError(''); setStatus('Connected to the room');
         }
       });
-      hostConnection.on('close', () => { joined = false; fail('De verbinding met de sessieleider is verbroken. Laat de sessieleider de kamer openhouden en verbind opnieuw.'); });
-      hostConnection.on('error', () => fail('De kamer is niet bereikbaar. Controleer of de sessieleider de kamer open heeft. Een bedrijfsnetwerk of VPN kan de verbinding blokkeren.'));
+      hostConnection.on('close', () => { joined = false; fail('The connection to the host was lost. Ask the host to keep the room open, then reconnect.'); });
+      hostConnection.on('error', () => fail('The room cannot be reached. Check that the host has the room open. A corporate network or VPN may be blocking the connection.'));
     });
     peer.on('connection', connection => {
       if (!session.host) { connection.on('open', () => connection.close()); return; }
@@ -85,17 +85,17 @@ export function useRoom(session: Session | null) {
       };
       connection.on('close', disconnect); connection.on('error', disconnect);
     });
-    peer.on('disconnected', () => { if (live && !peer.destroyed) { setStatus('Verbinding herstellen…'); peer.reconnect(); } });
+    peer.on('disconnected', () => { if (live && !peer.destroyed) { setStatus('Reconnecting…'); peer.reconnect(); } });
     peer.on('error', err => {
-      if (err.type === 'unavailable-id') fail('Deze kamer staat al open in een ander tabblad. Ga terug naar dat tabblad.');
-      else if (err.type === 'peer-unavailable') fail('Deze kamer is niet actief. Vraag de sessieleider om de oorspronkelijke kamer te openen.');
-      else fail('Verbinden is niet gelukt. Controleer je internetverbinding. Een bedrijfsnetwerk of VPN kan directe verbindingen blokkeren.');
+      if (err.type === 'unavailable-id') fail('This room is already open in another tab. Return to that tab.');
+      else if (err.type === 'peer-unavailable') fail('This room is not active. Ask the host to open the original room.');
+      else fail('Connection failed. Check your internet connection. A corporate network or VPN may block direct connections.');
     });
-    const watchdog = setTimeout(() => { if (session.host && !ready) fail('De verbindingsdienst reageert niet. Controleer je internetverbinding en probeer opnieuw.'); else if (!session.host && !joined) fail('De kamer reageert niet. Controleer de link en vraag de sessieleider om de kamer open te houden.'); }, 18000);
+    const watchdog = setTimeout(() => { if (session.host && !ready) fail('The connection service is not responding. Check your internet connection and try again.'); else if (!session.host && !joined) fail('The room is not responding. Check the link and ask the host to keep the room open.'); }, 18000);
     const heartbeat = setInterval(() => {
       if (!session.host && hostConnection?.open) {
         hostConnection.send({ type: 'ping' });
-        if (joined && Date.now() - received > 25000) { joined = false; fail('De sessieleider reageert niet meer. Verbind opnieuw wanneer de kamer weer open is.'); }
+        if (joined && Date.now() - received > 25000) { joined = false; fail('The host is no longer responding. Reconnect when the room is open again.'); }
       }
     }, 5000);
     return () => { live = false; clearTimeout(watchdog); clearInterval(heartbeat); connections.forEach(c => c.close()); peer.destroy(); sendRef.current = () => {}; };

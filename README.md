@@ -1,33 +1,37 @@
 # Story Point Shodown
 
-Een Nederlandse planning-pokerarena met originele fantasykaarten. Maak een kamer, deel de unieke URL en schat meerdere stories in met je collega's.
+A planning poker arena with original fantasy creature cards. Create a room, share its unique URL, and estimate multiple stories with your team.
 
-## Gebruiken
+## How to play
 
-1. Vul je naam en eventueel een kamernaam in.
-2. Maak de kamer en deel de link met je team.
-3. Voeg stories toe, eventueel met ticketreferentie en beschrijving.
-4. Iedereen kiest een kaart: 0,5 · 1 · 2 · 3 · 5 · 8 · 13 · 20 · 40, ? of ☕.
-5. De sessieleider onthult de kaarten. Bespreek verschillen en leg een gezamenlijke inschatting vast.
-6. Ga door naar de volgende story. Download het resultatenoverzicht als CSV voordat je de kamer sluit.
+1. Enter your name and an optional room name.
+2. Create the room and share its link with your team.
+3. Add stories with optional ticket references and descriptions.
+4. Everyone chooses a card: 0.5, 1, 2, 3, 5, 8, 13, 20, 40, ? when unsure, or ☕ for a break.
+5. The host reveals the cards. Discuss differences and save a shared estimate.
+6. Move on to the next story. Download the results as a CSV before closing the room.
 
-## Zonder database
+Cards adapt to the available space and wrap onto multiple rows. The uncertainty and break buttons sit below the numeric cards. Each numeric card has its own creature, progressing from small starter creatures to powerful titans.
 
-De website bestaat uit statische bestanden en kan rechtstreeks op Vercel worden gehost. Er zijn geen API-sleutels, database of serverfuncties nodig.
+## No database required
 
-PeerJS gebruikt zijn openbare verbindingsdienst om browsers met elkaar in contact te brengen. Daarna loopt de kamercommunicatie via WebRTC-datakanalen. Dit is geen volledig dienstloze oplossing: de PeerJS-verbindingsdienst en STUN-diensten moeten bereikbaar zijn. Zie [PeerJS](https://peerjs.com/client/getting-started) en [PeerServer Cloud](https://peerjs.com/server/cloud).
+The app consists of static files and can be hosted directly on Vercel. No API keys, database, or server functions are required.
 
-De sessieleider is de bron van de kamerstatus. Alleen de sessieleider kan stories toevoegen, wisselen, verwijderen, rondes onthullen/herstarten en inschattingen vastleggen. Deelnemers ontvangen uitsluitend hun eigen stem en de stemstatus van anderen tot de onthulling. De sessieleider is technisch vertrouwd en heeft de volledige status in de eigen browser.
+PeerJS uses its public signaling service to connect browsers. Room communication then uses WebRTC data channels. The PeerJS signaling and STUN services must remain reachable. See [PeerJS](https://peerjs.com/client/getting-started) and [PeerServer Cloud](https://peerjs.com/server/cloud).
 
-De browser van de sessieleider bewaart een herstelkopie in sessionStorage. Herladen in hetzelfde tabblad kan de kamer herstellen; na herladen moeten deelnemers zo nodig opnieuw verbinden. Dit is geen duurzame opslag: reken niet op herstel na het sluiten van het tabblad. Dezelfde tab twee keer dupliceren wordt niet ondersteund als twee verschillende personen. Iedereen met de onvoorspelbare kamerlink kan deelnemen. Er is geen accountcontrole of wachtwoord.
+The host is the source of truth for room state. Only the host can add, select, or delete stories, reveal or restart rounds, and save final estimates. Before the reveal, participants receive only their own estimate and whether others have voted. The host is trusted and holds the full room state in their browser.
 
-De sessieleider moet verbonden blijven. Er is geen automatische overname door een andere deelnemer. Bedrijfsfirewalls, strikte NAT en sommige VPN's kunnen WebRTC blokkeren; er is geen beheerde TURN-relay geconfigureerd. De interface meldt verbindingsproblemen en biedt opnieuw verbinden aan. Voor gegarandeerde werking op zulke netwerken is later een beheerde realtime-dienst of TURN-relay nodig.
+The host's browser keeps a recovery copy in sessionStorage. Reloading the same tab can restore the room; participants may need to reconnect. This is not durable storage: do not rely on recovery after closing the tab. Duplicating a tab is not supported as a way to join as two different people. Anyone with the unguessable room link can join; there are no accounts or passwords.
 
-Maximaal 30 unieke deelnemers en 100 stories per kamer. Deelnemers blijven bij verbroken verbinding zichtbaar als offline, zodat eerdere stemmen in het resultatenoverzicht blijven staan. Resultaten worden niet automatisch gewist bij het wisselen van story. Herstarten van een ronde wist de stemmen en definitieve inschatting van die story.
+The host must stay connected. There is no automatic host handover. Corporate firewalls, strict NAT, and some VPNs can block WebRTC; no managed TURN relay is configured. The interface reports connection problems and offers a reconnect action. Guaranteed connectivity on such networks would require a managed realtime service or TURN relay.
 
-## Ontwikkelen
+Each room supports up to 30 unique participants and 100 stories. Disconnected participants remain visible as offline so their earlier votes remain in the results. Switching stories preserves their votes. Restarting a round clears that story's votes and final estimate.
 
-Node.js 22 of nieuwer en npm:
+The interface, accessibility labels, connection messages, and CSV headers are in English. Numeric displays use a decimal point. Existing half-point wire values remain unchanged for room compatibility. User-entered names, story titles, and descriptions are preserved as entered.
+
+## Development
+
+Use Node.js 22 or newer and npm:
 
 ```sh
 npm ci
@@ -36,21 +40,23 @@ npm test
 npm run build
 ```
 
-Vercel-configuratie staat in `vercel.json`. Vercel detecteert Vite en publiceert de map `dist`. Publiceren in je eigen account:
+Vercel configuration is in `vercel.json`. Vercel detects Vite and publishes `dist`. To deploy to your own account:
 
 ```sh
 vercel login
 vercel --prod
 ```
 
-De publicatie bevat alleen de applicatie en de kaartillustraties. De aangeleverde persoonlijke schets is niet in dit project opgenomen.
+The deployment contains the application and creature illustrations. The original personal layout sketch is not included in the project.
 
-## Validatie
+## Validation
 
-Geautomatiseerde tests controleren autorisatie, verborgen stemmen in de netwerkweergave, geheimhouding van herverbindingsgegevens, ongeldige en vertraagde stemmen, onafhankelijke stories, resetten, gemiddelden, CSV-export en verwijderen. De productiebuild controleert TypeScript en bundelt de applicatie. Een echte sessie tussen meerdere apparaten en bedrijfsnetwerken is nog niet getest.
+Automated tests cover authorization, vote privacy, reconnection credential privacy, invalid and stale votes, independent stories, round resets, averages, decimal formatting, CSV exports, and story deletion. The production build checks TypeScript and bundles the app. A multi-device session across corporate networks has not been formally tested.
 
-Browsers met de experimentele `document.modelContext`-API krijgen `read_planning_session` en `start_story_creation`. Deze gebruiken dezelfde zichtbare status en storydialoog. De optionele WebMCP-integratie is niet in een ondersteunde browsercontext geverifieerd.
+Browsers supporting the experimental `document.modelContext` API receive `read_planning_session` and `start_story_creation` tools. They use the same visible state and story dialog as the interface. The optional WebMCP integration has not been verified in a supported browser context.
 
-## Illustratie
+## Artwork
 
-De negen originele wezens zijn met ingebouwde ImageGen gemaakt; zie `ARTWORK.md` voor de exacte prompts en `public/art/` voor de drie illustratiesets. Lettertypen: DM Sans en Barlow Condensed via Google Fonts. Bij onbeschikbaarheid worden lokale sans-seriflettertypen gebruikt.
+The nine original creatures were made with built-in ImageGen. See `ARTWORK.md` for the exact prompts and `public/art/` for the artwork. The active sheets are `creatures-starters.png`, `creatures-elements.png`, and `creatures-titans.png`. The original `creatures.png` is retained as a design reference.
+
+Fonts: DM Sans and Barlow Condensed via Google Fonts, with local sans-serif fallbacks.

@@ -2,6 +2,10 @@ export const POINT_VALUES = ['0,5', '1', '2', '3', '5', '8', '13', '20', '40'] a
 export type PointValue = typeof POINT_VALUES[number];
 export const VALUES = [...POINT_VALUES, '?', '☕'] as const;
 export type Value = typeof VALUES[number];
+// Keep wire values stable for existing rooms; format only the displayed text.
+export function formatPoint(value: string | null | undefined): string {
+  return value?.replace(',', '.') ?? '—';
+}
 export type Member = { id: string; name: string; online: boolean; host: boolean };
 export type Story = { id: string; title: string; reference: string; description: string; revealed: boolean; round: string; votes: Record<string, Value>; estimate: Value | null };
 export type Room = { id: string; name: string; hostId: string; activeId: string | null; members: Member[]; stories: Story[]; credentials: Record<string, string> };
@@ -41,9 +45,9 @@ export function reduceRoom(room: Room, actor: string, input: unknown): Room {
 }
 export function stats(story: PublicStory) {
   const values = Object.values(story.votes).filter((v): v is Value => v !== null && v !== '?' && v !== '☕').map(v => Number(v.replace(',', '.')));
-  return { count: values.length, average: values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) : '—', consensus: values.length > 1 && values.every(v => v === values[0]), min: values.length ? Math.min(...values) : null, max: values.length ? Math.max(...values) : null };
+  return { count: values.length, average: values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toLocaleString('en-US', { maximumFractionDigits: 1 }) : '—', consensus: values.length > 1 && values.every(v => v === values[0]), min: values.length ? Math.min(...values) : null, max: values.length ? Math.max(...values) : null };
 }
 export function csv(room: PublicRoom) {
   const escape = (value: string) => '"' + (/^[=+@\-\t\r]/.test(value) ? "'" + value : value).replaceAll('"', '""') + '"';
-  return '\uFEFF' + [['Referentie', 'Story', 'Inschatting', ...room.members.map(m => m.name)], ...room.stories.map(s => [s.reference, s.title, s.estimate ?? '', ...room.members.map(m => s.revealed ? s.votes[m.id] ?? '' : '')])].map(row => row.map(escape).join(';')).join('\r\n');
+  return '\uFEFF' + [['Reference', 'Story', 'Estimate', ...room.members.map(m => m.name)], ...room.stories.map(s => [s.reference, s.title, formatPoint(s.estimate ?? ''), ...room.members.map(m => s.revealed ? formatPoint(s.votes[m.id] ?? '') : '')])].map(row => row.map(escape).join(';')).join('\r\n');
 }
