@@ -7,7 +7,7 @@ Een Nederlandse planning-pokerarena met originele fantasykaarten. Maak een kamer
 1. Vul je naam en eventueel een kamernaam in.
 2. Maak de kamer en deel de link met je team.
 3. Voeg stories toe, eventueel met ticketreferentie en beschrijving.
-4. Iedereen kiest een kaart: 0, 1, 2, 3, 5, 8, 13, 20, ? of ☕.
+4. Iedereen kiest een kaart: 0,5 · 1 · 2 · 3 · 5 · 8 · 13 · 20 · 40, ? of ☕.
 5. De sessieleider onthult de kaarten. Bespreek verschillen en leg een gezamenlijke inschatting vast.
 6. Ga door naar de volgende story. Download het resultatenoverzicht als CSV voordat je de kamer sluit.
 
@@ -53,4 +53,4 @@ Browsers met de experimentele `document.modelContext`-API krijgen `read_planning
 
 ## Illustratie
 
-De drie originele wezens zijn met ingebouwde ImageGen gemaakt; zie `ARTWORK.md` voor het exacte prompt en `public/art/creatures.png` voor de afbeelding. Lettertypen: DM Sans en Barlow Condensed via Google Fonts. Bij onbeschikbaarheid worden lokale sans-seriflettertypen gebruikt.
+De negen originele wezens zijn met ingebouwde ImageGen gemaakt; zie `ARTWORK.md` voor de exacte prompts en `public/art/` voor de drie illustratiesets. Lettertypen: DM Sans en Barlow Condensed via Google Fonts. Bij onbeschikbaarheid worden lokale sans-seriflettertypen gebruikt.

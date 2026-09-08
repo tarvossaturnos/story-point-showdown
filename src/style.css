@@ -34,3 +34,12 @@ input,textarea,.lobby-intro,.story-description,.empty-arena>p,dialog>p,.help-ste
 .overview-vote-card.hidden-vote{border-style:solid;border-color:#9466b0;background:repeating-linear-gradient(45deg,#382546,#382546 3px,#40294e 3px,#40294e 5px);color:#cda6eb}
 @media(max-width:1100px){.overview-story{gap:24px;grid-template-columns:minmax(0,1fr) minmax(200px,1fr)}}
 @media(max-width:600px){.overview-story{grid-template-columns:minmax(0,1fr);gap:25px;padding:25px 0}.overview-story h3{font-size:1.75rem}.overview-votes{padding:0 0 0 13px;border-left:2px solid #50375d}.overview-story-footer{flex-direction:row;justify-content:space-between;align-items:center;flex-wrap:wrap;width:100%;gap:12px}}
+
+/* Every numeric estimate has its own creature and elemental frame. */
+.creature-card.frost{--card-color:#9ed8ed;--card-dark:#183c52;background:linear-gradient(135deg,#417185,#182d3d)}
+.creature-card.solar{--card-color:#e5cd83;--card-dark:#56431d;background:linear-gradient(135deg,#8b753d,#392d18)}
+.creature-card.ocean{--card-color:#74cec5;--card-dark:#184548;background:linear-gradient(135deg,#346e6d,#162f32)}
+.creature-card.magma{--card-color:#e49681;--card-dark:#4e251f;background:linear-gradient(135deg,#81473d,#321d1b)}
+.creature-card.storm{--card-color:#9cb8ed;--card-dark:#233458;background:linear-gradient(135deg,#485f90,#1c253d)}
+.creature-card.cosmic{--card-color:#daa0e7;--card-dark:#44204f;background:linear-gradient(135deg,#783f87,#2f1c3a)}
+.hand-cards .creature-card{width:calc((100% - 110px)/9 - 8px)}
