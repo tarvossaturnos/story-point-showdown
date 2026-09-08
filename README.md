@@ -1,11 +1,11 @@
 # Story Point Shodown
 
-A planning poker arena with original fantasy creature cards. Create a room, share its unique URL, and estimate multiple stories with your team.
+A planning poker arena with original fantasy creature cards. Create a room, share its 5-character PIN or room link, and estimate multiple stories with your team.
 
 ## How to play
 
 1. Enter your name and an optional room name.
-2. Create the room and share its link with your team.
+2. Create the room and share its randomly generated 5-character PIN or link. Teammates can enter the PIN on the home page.
 3. Add stories with optional ticket references and descriptions.
 4. Everyone chooses a card: 0.5, 1, 2, 3, 5, 8, 13, 20, 40, ? when unsure, or ☕ for a break.
 5. The host reveals the cards. Discuss differences and save a shared estimate.
@@ -21,7 +21,7 @@ PeerJS uses its public signaling service to connect browsers. Room communication
 
 The host is the source of truth for room state. Only the host can add, select, or delete stories, reveal or restart rounds, and save final estimates. Before the reveal, participants receive only their own estimate and whether others have voted. The host is trusted and holds the full room state in their browser.
 
-The host's browser keeps a recovery copy in sessionStorage. Reloading the same tab can restore the room; participants may need to reconnect. This is not durable storage: do not rely on recovery after closing the tab. Duplicating a tab is not supported as a way to join as two different people. Anyone with the unguessable room link can join; there are no accounts or passwords.
+The host's browser keeps a recovery copy in sessionStorage. Reloading the same tab can restore the room; participants may need to reconnect. This is not durable storage: do not rely on recovery after closing the tab. Duplicating a tab is not supported as a way to join as two different people. Anyone with the PIN or room link can join; the short PIN is a room identifier, not a password. There are no accounts. Codes use uppercase letters and digits without the ambiguous I, O, 0, and 1. They are generated with browser cryptographic randomness. The signaling service reserves the active room ID; new-room collisions trigger up to five fresh-code retries. Restored rooms retain their original ID. Older UUID links still work. Codes are not permanent and may be reused after a room closes.
 
 The host must stay connected. There is no automatic host handover. Corporate firewalls, strict NAT, and some VPNs can block WebRTC; no managed TURN relay is configured. The interface reports connection problems and offers a reconnect action. Guaranteed connectivity on such networks would require a managed realtime service or TURN relay.
 

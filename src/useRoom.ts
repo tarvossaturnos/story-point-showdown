@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Peer, { type DataConnection } from 'peerjs';
 import { reduceRoom, viewFor, type Action, type PublicRoom, type Room } from './game';
-export type Session = { roomId: string; userId: string; name: string; host: boolean; token?: string; initial?: Room };
+export type Session = { roomId: string; userId: string; name: string; host: boolean; token?: string; initial?: Room; fresh?: boolean; collisions?: number };
 type Wire = { type: 'hello'; userId: string; name: string; token: string } | { type: 'action'; action: Action } | { type: 'state'; room: PublicRoom } | { type: 'ping' } | { type: 'pong' };
-export function useRoom(session: Session | null) {
+export function useRoom(session: Session | null, onPinCollision?: () => void) {
+  const collisionHandler = useRef(onPinCollision);
+  collisionHandler.current = onPinCollision;
+  const openedId = useRef<string | null>(null);
   const [room, setRoom] = useState<PublicRoom | null>(session?.initial ? viewFor(session.initial, session.userId) : null);
   const [status, setStatus] = useState('Connecting…');
   const [connected, setConnected] = useState(false);
@@ -20,7 +23,8 @@ export function useRoom(session: Session | null) {
     const connections = new Map<string, DataConnection>();
     let hostConnection: DataConnection | undefined;
     setError(''); setConnected(false); setStatus('Connecting…');
-    if (session.host && !source.current) source.current = session.initial ?? null;
+    if (session.host && source.current?.id !== session.roomId) source.current = session.initial ?? null;
+    setRoom(null);
     const peer = session.host ? new Peer('shodown-' + session.roomId) : new Peer();
     const broadcast = () => {
       if (!source.current || !live) return;
@@ -34,6 +38,7 @@ export function useRoom(session: Session | null) {
     peer.on('open', () => {
       if (!live) return;
       ready = true;
+      openedId.current = session.roomId;
       if (session.host) { setConnected(true); setStatus('Room is live'); broadcast(); return; }
       setStatus('Joining room…');
       hostConnection = peer.connect('shodown-' + session.roomId, { reliable: true, serialization: 'json' });
@@ -87,7 +92,11 @@ export function useRoom(session: Session | null) {
     });
     peer.on('disconnected', () => { if (live && !peer.destroyed) { setStatus('Reconnecting…'); peer.reconnect(); } });
     peer.on('error', err => {
-      if (err.type === 'unavailable-id') fail('This room is already open in another tab. Return to that tab.');
+      if (err.type === 'unavailable-id') {
+        if (session.host && session.fresh && openedId.current !== session.roomId && (session.collisions ?? 0) < 5 && collisionHandler.current) {
+          collisionHandler.current();
+        } else fail(session.fresh && openedId.current !== session.roomId ? 'Could not reserve a room PIN. Please try creating a room again.' : 'This room is already open in another tab. Return to that tab.');
+      }
       else if (err.type === 'peer-unavailable') fail('This room is not active. Ask the host to open the original room.');
       else fail('Connection failed. Check your internet connection. A corporate network or VPN may block direct connections.');
     });

@@ -66,3 +66,14 @@ input,textarea,.lobby-intro,.story-description,.empty-arena>p,dialog>p,.help-ste
 }
 .hand-alternatives .special-card strong { font-size: 1.5rem; }
 .hand-alternatives .special-card span { font-size: .875rem; }
+
+.join-pin-form{border-top:1px solid var(--line);margin-top:24px;padding-top:21px}
+.join-pin-form>label{font-size:.875rem;margin-bottom:9px}
+.join-pin-controls{display:flex;gap:10px;align-items:stretch}
+.join-pin-controls input{min-width:0;margin:0;font-size:1rem;letter-spacing:.2em;font-weight:600}
+.join-pin-controls .button{flex-shrink:0}
+.room-pin{display:flex;gap:12px;align-items:center;margin:12px 0 15px}
+.room-pin>span{font-size:.75rem;color:var(--muted);letter-spacing:.1em}
+.room-pin>strong,.joining-pin{font-family:monospace;font-size:1.3rem;letter-spacing:.2em;color:var(--purple);border:1px solid #584268;background:#281d32;border-radius:5px;padding:6px 10px}
+.joining-pin{font-size:1rem;margin-left:auto}
+@media(max-width:400px){.join-pin-controls{flex-wrap:wrap}.join-pin-controls input{flex:1 1 100%}.join-pin-controls .button{width:100%}.panel-title{flex-wrap:wrap}.joining-pin{margin-left:0}}
