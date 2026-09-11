@@ -1,4 +1,4 @@
-# Story Point Shodown
+# Story Point Showdown
 
 A planning poker arena with original fantasy creature cards. Create a room, share its 5-character PIN or room link, and estimate multiple stories with your team.
 

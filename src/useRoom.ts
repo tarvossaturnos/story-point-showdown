@@ -25,6 +25,7 @@ export function useRoom(session: Session | null, onPinCollision?: () => void) {
     setError(''); setConnected(false); setStatus('Connecting…');
     if (session.host && source.current?.id !== session.roomId) source.current = session.initial ?? null;
     setRoom(null);
+    // Preserve the signaling namespace so existing room links remain compatible.
     const peer = session.host ? new Peer('shodown-' + session.roomId) : new Peer();
     const broadcast = () => {
       if (!source.current || !live) return;
