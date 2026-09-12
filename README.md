@@ -60,3 +60,28 @@ Browsers supporting the experimental `document.modelContext` API receive `read_p
 The nine original creatures were made with built-in ImageGen. See `ARTWORK.md` for the exact prompts and `public/art/` for the artwork. The active sheets are `creatures-starters.png`, `creatures-elements.png`, and `creatures-titans.png`. The original `creatures.png` is retained as a design reference.
 
 Fonts: DM Sans and Barlow Condensed via Google Fonts, with local sans-serif fallbacks.
+
+## Search engine metadata
+
+The homepage targets English searches for online planning poker, story point poker,
+no-signup estimation, and agile team refinement. `index.html` contains the title,
+description, social sharing metadata, and WebApplication structured data. These
+are delivered in the HTML head without changing the visible website copy or layout.
+Vercel sends an
+`X-Robots-Tag: noindex, follow` header for `?room=` URLs, and the app also updates
+its robots meta tag when a room is created or joined. Rooms use query parameters
+on `/`, so no catch-all rewrite is needed: real assets and crawl files are served
+directly, and unknown paths can return 404 instead of duplicating the homepage.
+
+The production origin defaults to `https://storypointshowdown.witsensoft.com`.
+To change domains, set `SITE_URL` in the build environment to the new public HTTPS
+origin (without a path, query, or fragment). The Vite plugin uses it to generate
+the canonical URL, Open Graph URL, WebSite structured data, `robots.txt`, and a
+homepage-only `sitemap.xml`. Preview deployments should
+use the production origin too, and should be protected from indexing separately
+through the hosting provider's preview controls.
+
+After deployment, verify the rendered homepage and room response headers, submit
+`/sitemap.xml` in Google Search Console, and request indexing of the homepage.
+Search rankings depend on competition, useful content, authority, and indexing;
+metadata does not guarantee a position.

@@ -40,6 +40,11 @@ function Modal({ title, children, close }: { title: string; children: React.Reac
 }
 function App() {
   const [session, setSession] = useState<Session | null>(recover);
+  useEffect(() => {
+    const inRoom = Boolean(session || roomId !== null);
+    document.querySelector('meta[name="robots"]')?.setAttribute('content', inRoom ? 'noindex, follow' : 'index, follow, max-image-preview:large');
+    document.title = inRoom ? 'Planning Poker Room | Story Point Showdown' : 'Free Online Planning Poker | Story Point Showdown';
+  }, [session]);
   const { room, connected, status, error, act, retry } = useRoom(session, () => {
     if (!session?.initial) return;
     const id = generateRoomPin();
